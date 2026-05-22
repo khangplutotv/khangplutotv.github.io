@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Freewheel Political Ads Pipeline — Project Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue:     #0057B8;
+    --blue-l:   #E8F0FB;
+    --blue-m:   #B3CCEF;
+    --purple:   #4B3F72;
+    --purple-l: #EFECF7;
+    --purple-m: #C4BAE0;
+    --coral:    #C8102E;
+    --coral-l:  #FDECEA;
+    --coral-m:  #F5B8C0;
+    --teal:     #007A5E;
+    --teal-l:   #E6F5F1;
+    --teal-m:   #99D4C7;
+    --green:    #2E7D32;
+    --green-l:  #F1F8E9;
+    --green-m:  #A5D6A7;
+    --amber:    #B45309;
+    --amber-l:  #FEF3C7;
+    --amber-m:  #FCD34D;
+    --adops:    #7C3AED;
+    --adops-l:  #EDE9FE;
+    --adops-m:  #C4B5FD;
+    --ink:      #1A1A2E;
+    --mid:      #6B6B80;
+    --line:     #D4D2CB;
+    --bg:       #F4F3EF;
+    --white:    #FFFFFF;
+    --warn:     #E8A020;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ══════════════════════════════════════
+     HEADER
+  ══════════════════════════════════════ */
+  .header {
+    background: var(--ink);
+    padding: 24px 48px 0;
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 20px;
+  }
+  .header-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: #8888A0;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .header-title { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+  .header-sub { font-size: 12px; color: #8888A0; margin-top: 4px; font-weight: 300; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #8888A0; font-family: 'IBM Plex Mono', monospace; }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ══════════════════════════════════════
+     TAB NAV
+  ══════════════════════════════════════ */
+  .tab-nav {
+    display: flex;
+    gap: 0;
+    margin-top: 4px;
+    overflow-x: auto;
+  }
+  .tab-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: #8888A0;
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+    text-transform: uppercase;
+  }
+  .tab-btn:hover { color: #ccc; }
+  .tab-btn.active { color: #fff; border-bottom-color: #fff; }
+
+  /* ══════════════════════════════════════
+     TAB PANELS
+  ══════════════════════════════════════ */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ══════════════════════════════════════
+     SHARED CONTENT STYLES
+  ══════════════════════════════════════ */
+  .content-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 48px 60px;
+  }
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    font-size: 13px;
+    color: var(--mid);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 12px;
+    margin-top: 32px;
+  }
+  .section-title:first-child { margin-top: 0; }
+
+  /* Cards */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .card-body {
+    font-size: 13px;
+    color: var(--mid);
+    line-height: 1.6;
+  }
+
+  /* Prose */
+  .prose { font-size: 13px; line-height: 1.7; color: var(--ink); }
+  .prose p { margin-bottom: 14px; }
+  .prose h3 { font-size: 15px; font-weight: 700; margin: 24px 0 8px; }
+  .prose ul { padding-left: 18px; margin-bottom: 14px; }
+  .prose li { margin-bottom: 5px; }
+
+  /* Question items */
+  .q-item {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .q-icon {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .q-icon-warn { background: var(--amber-l); color: var(--amber); }
+  .q-icon-eng  { background: var(--blue-l);  color: var(--blue);  }
+  .q-icon-lead { background: var(--purple-l);color: var(--purple);}
+  .q-text { flex: 1; }
+  .q-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 4px;
+  }
+  .q-main { font-size: 13px; line-height: 1.5; font-weight: 500; }
+  .q-context { font-size: 12px; color: var(--mid); margin-top: 4px; line-height: 1.5; }
+  .q-owner {
+    display: inline-block;
+    margin-top: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--mid);
+    border: 1px solid var(--line);
+  }
+
+  /* Status badge */
+  .badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .badge-draft   { background: var(--amber-l);  color: var(--amber); }
+  .badge-open    { background: var(--coral-l);   color: var(--coral); }
+  .badge-tbd     { background: var(--blue-l);    color: var(--blue); }
+  .badge-done    { background: var(--green-l);   color: var(--green); }
+
+  /* Table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mid);
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+  }
+  .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--bg);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: #fafaf8; }
+
+  /* Code block */
+  .code-block {
+    background: var(--ink);
+    color: #a8d8a8;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    padding: 16px 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 8px 0 16px;
+  }
+  .code-comment { color: #6b7280; }
+  .code-key { color: #93c5fd; }
+  .code-str { color: #fca5a5; }
+  .code-fn  { color: #c4b5fd; }
+
+  /* Milestone row */
+  .milestone {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .milestone:last-child { border-bottom: none; }
+  .ms-num {
+    flex-shrink: 0;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ms-body { flex: 1; }
+  .ms-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .ms-detail { font-size: 12px; color: var(--mid); line-height: 1.5; }
+  .ms-dur {
+    flex-shrink: 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--mid);
+    margin-top: 4px;
+  }
+
+  /* ══════════════════════════════════════
+     PIPELINE DIAGRAM (Tab 1)
+  ══════════════════════════════════════ */
+  .pipeline-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 32px 0 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .step {
+    width: 100%;
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    overflow: hidden;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .step:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,.10); }
+  .step-header {
+    padding: 16px 20px 14px;
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .step-num-badge {
+    flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 700; margin-top: 2px;
+  }
+  .step-header-text { flex: 1; }
+  .step-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    letter-spacing: .14em; text-transform: uppercase; opacity: .55; margin-bottom: 4px;
+  }
+  .step-title { font-size: 15px; font-weight: 700; line-height: 1.3; margin-bottom: 3px; }
+  .step-sub { font-size: 12px; line-height: 1.4; opacity: .7; }
+  .step-body {
+    padding: 12px 20px 16px; border-top: 1px solid transparent; display: flex; gap: 20px;
+  }
+  .step-body-col { flex: 1; }
+  .step-body-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    letter-spacing: .12em; text-transform: uppercase; opacity: .45; margin-bottom: 6px;
+  }
+  .detail-item {
+    display: flex; align-items: flex-start; gap: 7px;
+    font-size: 11px; line-height: 1.5; margin-bottom: 3px;
+  }
+  .detail-item::before {
+    content: '›'; font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+    font-weight: 600; flex-shrink: 0; opacity: .5;
+  }
+  .note-item {
+    display: flex; align-items: flex-start; gap: 7px;
+    font-size: 11px; line-height: 1.5; margin-bottom: 3px; font-style: italic; opacity: .75;
+  }
+  .note-item::before {
+    content: '!'; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; flex-shrink: 0;
+    background: var(--amber-m); color: var(--amber);
+    width: 14px; height: 14px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin-top: 1px;
+  }
+  /* step color themes */
+  .s-trigger { background: var(--ink); border-color: #333350; }
+  .s-trigger .step-tag { color: #8888A0; } .s-trigger .step-title { color: #fff; } .s-trigger .step-sub { color: #8888A0; }
+  .s-trigger .step-body { background: #232336; border-top-color: #333350; } .s-trigger .step-body-label { color: #8888A0; }
+  .s-trigger .detail-item { color: #8888A0; } .s-trigger .step-num-badge { background: #333350; color: #8888A0; }
+  .s-blue { background: var(--blue-l); border-color: var(--blue-m); }
+  .s-blue .step-tag,.s-blue .step-title { color: var(--blue); } .s-blue .step-body { background: #dce9f8; border-top-color: var(--blue-m); }
+  .s-blue .step-num-badge { background: var(--blue); color: #fff; }
+  .s-purple { background: var(--purple-l); border-color: var(--purple-m); }
+  .s-purple .step-tag,.s-purple .step-title { color: var(--purple); } .s-purple .step-body { background: #e4dff5; border-top-color: var(--purple-m); }
+  .s-purple .step-num-badge { background: var(--purple); color: #fff; }
+  .s-coral { background: var(--coral-l); border-color: var(--coral-m); }
+  .s-coral .step-tag,.s-coral .step-title { color: var(--coral); } .s-coral .step-body { background: #fcd6da; border-top-color: var(--coral-m); }
+  .s-coral .step-num-badge { background: var(--coral); color: #fff; }
+  .s-teal { background: var(--teal-l); border-color: var(--teal-m); }
+  .s-teal .step-tag,.s-teal .step-title { color: var(--teal); } .s-teal .step-body { background: #c8e8e0; border-top-color: var(--teal-m); }
+  .s-teal .step-num-badge { background: var(--teal); color: #fff; }
+  .s-green { background: var(--green-l); border-color: var(--green-m); }
+  .s-green .step-tag,.s-green .step-title { color: var(--green); } .s-green .step-body { background: #d4edcf; border-top-color: var(--green-m); }
+  .s-green .step-num-badge { background: var(--green); color: #fff; }
+  /* connector */
+  .connector { display: flex; flex-direction: column; align-items: center; }
+  .conn-line { width: 2px; height: 32px; background: var(--line); }
+  .conn-arrow { width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid var(--line); }
+  .conn-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--mid);
+    padding: 2px 8px; background: var(--white); border: 1px solid var(--line);
+    border-radius: 3px; margin: 4px 0; letter-spacing: .06em;
+  }
+  /* decision */
+  .decision-card {
+    width: 100%; background: var(--white); border: 1.5px solid var(--line);
+    border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 20px;
+  }
+  .diamond-wrap { flex-shrink:0; width:72px; height:72px; position:relative; }
+  .diamond {
+    width:50px; height:50px; transform:rotate(45deg); border-radius:5px;
+    position:absolute; top:11px; left:11px; background:var(--purple-l); border:1.5px solid var(--purple-m);
+  }
+  .diamond-label {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:700; color:var(--purple); text-align:center; line-height:1.3; pointer-events:none;
+  }
+  .decision-paths { display:flex; flex-direction:column; gap:8px; flex:1; }
+  .dpath { display:flex; align-items:flex-start; gap:9px; font-size:12px; }
+  .dpath-badge { flex-shrink:0; padding:2px 9px; border-radius:3px; font-size:10px; font-weight:700; font-family:'IBM Plex Mono',monospace; margin-top:1px; }
+  .dp-yes { background:var(--green-l); color:var(--green); }
+  .dp-no  { background:var(--bg); color:var(--mid); border:1px solid var(--line); }
+  .dpath-text { color:var(--mid); line-height:1.4; }
+  /* adops decision */
+  .adops-decision { width:100%; border-radius:12px; border:1.5px solid var(--adops-m); overflow:hidden; }
+  .adops-decision-header { background:var(--adops-l); padding:14px 20px; display:flex; align-items:center; gap:12px; }
+  .adops-diamond-wrap { flex-shrink:0; width:56px; height:56px; position:relative; }
+  .adops-diamond { width:38px; height:38px; transform:rotate(45deg); border-radius:4px; position:absolute; top:9px; left:9px; background:var(--adops); }
+  .adops-diamond-label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; color:#fff; text-align:center; line-height:1.2; pointer-events:none; }
+  .adops-decision-title { font-size:14px; font-weight:700; color:var(--adops); }
+  .adops-decision-sub { font-size:11px; color:var(--mid); margin-top:3px; }
+  .adops-outcomes { display:flex; border-top:1px solid var(--adops-m); }
+  .adops-outcome { flex:1; padding:14px 18px; display:flex; flex-direction:column; gap:4px; }
+  .adops-outcome+.adops-outcome { border-left:1px solid var(--adops-m); }
+  .outcome-badge { display:inline-flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; padding:3px 10px; border-radius:4px; width:fit-content; margin-bottom:4px; }
+  .ob-approve { background:var(--green-l); color:var(--green); }
+  .ob-reject  { background:var(--coral-l); color:var(--coral); }
+  .outcome-text { font-size:11px; line-height:1.5; color:var(--mid); }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--ink); padding: 14px 48px;
+    display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+  }
+  .stat { display:flex; align-items:center; gap:10px; }
+  .stat-num { font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:700; color:#fff; }
+  .stat-label { font-size:11px; color:#8888A0; line-height:1.3; }
+  .stat-div { width:1px; height:28px; background:#333350; }
+  .stat-right { margin-left:auto; font-size:11px; color:#555570; font-family:'IBM Plex Mono',monospace; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-tag">Media Operations · Comply AI Integration · Draft v1.0 · May 2026</div>
+      <div class="header-title">Freewheel Political Ads Pre-Live Retrieval Pipeline</div>
+      <div class="header-sub">Project hub — overview, open questions, PRD, and technical approach</div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Freewheel</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>VAST Parse</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>IronDome</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>ComplyAI</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--adops)"></div>Ad Ops</div>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('overview')">01 · Overview</button>
+    <button class="tab-btn" onclick="switchTab('adops')">02 · Questions — Ad Ops</button>
+    <button class="tab-btn" onclick="switchTab('engineering')">03 · Questions — Engineering</button>
+    <button class="tab-btn" onclick="switchTab('leadership')">04 · Questions — Leadership</button>
+    <button class="tab-btn" onclick="switchTab('prd')">05 · PRD</button>
+    <button class="tab-btn" onclick="switchTab('technical')">06 · Technical Implementation</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════
+     TAB 1 — OVERVIEW
+════════════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-overview" class="tab-panel active">
+  <div class="content-wrap" style="max-width:100%;padding:32px 48px 0;">
+    <div class="page-title">Project Overview</div>
+    <div class="page-sub">This pipeline automates the retrieval, scanning, and compliance reporting of political ad creatives from Freewheel before they go live. It connects Freewheel (ad source) → IronDome (spec scanner) → ComplyAI (compliance team) → Ad Ops (final approve/reject).</div>
+  </div>
+
+  <!-- WORKFLOW DIAGRAM -->
+  <div style="padding:0 48px;">
+    <div class="pipeline-wrap">
+
+      <!-- TRIGGER -->
+      <div class="step s-trigger">
+        <div class="step-header">
+          <div class="step-num-badge">⏱</div>
+          <div class="step-header-text">
+            <div class="step-tag">Trigger</div>
+            <div class="step-title">Hourly scheduler fires</div>
+            <div class="step-sub">Automated run at :00 each hour · loads last_run_ts from state file</div>
+          </div>
+        </div>
+        <div class="step-body">
+          <div class="step-body-col">
+            <div class="step-body-label">How it works</div>
+            <div class="detail-item" style="color:#8888A0;">Delta cursor — only creatives new or updated since last successful run are processed</div>
+            <div class="detail-item" style="color:#8888A0;">State file persists last_run_ts so failures can resume without reprocessing clean records</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+      <!-- STEP 1 -->
+      <div class="step s-blue">
+        <div class="step-header">
+          <div class="step-num-badge">1</div>
+          <div class="step-header-text">
+            <div class="step-tag">Stage 01 · Freewheel</div>
+            <div class="step-title">Freewheel Fetcher</div>
+            <div class="step-sub">Poll Freewheel API for PENDING political ad creatives updated since last run</div>
+          </div>
+        </div>
+        <div class="step-body">
+          <div class="step-body-col">
+            <div class="step-body-label">What it fetches</div>
+            <div class="detail-item">Endpoint: GET /v1/creative/programmatic_creatives</div>
+            <div class="detail-item">Filter: approval_status = PENDING (programmatic creatives only)</div>
+            <div class="detail-item">Political filter: industries[ ].name contains "politic" (case-insensitive)</div>
+            <div class="detail-item">Paginate 100 records per page until all results retrieved</div>
+          </div>
+          <div class="step-body-col">
+            <div class="step-body-label">Freewheel data model notes</div>
+            <div class="note-item">approval_status is programmatic-only — not available on advertiser module creatives</div>
+            <div class="note-item">In advertiser module, a creative on an active placement implies approval — no explicit approval field</div>
+            <div class="note-item">Brand is set at the IO (Insertion Order) level in the advertiser module hierarchy</div>
+            <div class="note-item">Industry location differs from Brand in advertiser module — depends on account setup</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><div class="conn-line"></div><div class="conn-label">creatives retrieved</div><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+      <!-- DECISION -->
+      <div class="decision-card">
+        <div class="diamond-wrap"><div class="diamond"></div><div class="diamond-label">Any<br>creatives?</div></div>
+        <div class="decision-paths">
+          <div class="dpath"><span class="dpath-badge dp-yes">YES</span><span class="dpath-text">Continue to Stage 2 — enrich with VAST XML metadata</span></div>
+          <div class="dpath"><span class="dpath-badge dp-no">NO</span><span class="dpath-text">Log empty run · save state · skip all remaining stages until next hourly trigger</span></div>
+        </div>
+      </div>
+
+      <div class="connector"><div class="conn-line"></div><div class="conn-label">yes — proceed</div><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+      <!-- STEP 2 -->
+      <div class="step s-purple">
+        <div class="step-header">
+          <div class="step-num-badge">2</div>
+          <div class="step-header-text">
+            <div class="step-tag">Stage 02 · VAST XML</div>
+            <div class="step-title">VAST XML Parser</div>
+            <div class="step-sub">Fetch and parse each creative's VAST XML to extract metadata not in the Freewheel API response</div>
+          </div>
+        </div>
+        <div class="step-body">
+          <div class="step-body-col">
+            <div class="step-body-label">Fields extracted from VAST XML</div>
+            <div class="detail-item">adDescription — from &lt;AdTitle&gt; element</div>
+            <div class="detail-item">fileFormat — from MediaFile type attribute (e.g. MP4)</div>
+            <div class="detail-item">fileSize — from MediaFile fileSize attribute, converted bytes → MB</div>
+          </div>
+          <div class="step-body-col">
+            <div class="step-body-label">Error handling</div>
+            <div class="detail-item">VAST URL cached per creative in-run to avoid duplicate fetches</div>
+            <div class="detail-item">If VAST fetch fails: deliver creative with null values — do not skip</div>
+            <div class="detail-item">Failures logged in run summary as vast_parse_errors count</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><div class="conn-line"></div><div class="conn-label">creatives enriched</div><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+      <!-- STEP 3 -->
+      <div class="step s-coral">
+        <div class="step-header">
+          <div class="step-num-badge">3</div>
+          <div class="step-header-text">
+            <div class="step-tag">Stage 03 · IronDome</div>
+            <div class="step-title">IronDome Scanner</div>
+            <div class="step-sub">Submit each creative to IronDome for spec validation — builds the flagged creatives list</div>
+          </div>
+        </div>
+        <div class="step-body">
+          <div class="step-body-col">
+            <div class="step-body-label">Scan logic</div>
+            <div class="detail-item">Send creative_id + vast_url to IronDome scan endpoint</div>
+            <div class="detail-item">Returns PASS or FAIL per creative + feedback string</div>
+            <div class="detail-item">FAIL → creative added to flagged list, feedback → GeneralNotes field</div>
+            <div class="detail-item">PASS → creative added to full list only</div>
+          </div>
+          <div class="step-body-col">
+            <div class="step-body-label">Error handling</div>
+            <div class="detail-item">3 retries with exponential backoff (5s, 10s, 20s)</div>
+            <div class="detail-item">Unreachable after retries → scan_status = UNKNOWN · full list only</div>
+            <div class="detail-item">Alert triggered if &gt;10% of creatives fail scan</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><div class="conn-line"></div><div class="conn-label">scan results collected</div><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+      <!-- STEP 4 -->
+      <div class="step s-teal">
+        <div class="step-header">
+          <div class="step-num-badge">4</div>
+          <div class="step-header-text">
+            <div class="step-tag">Stage 04 · ComplyAI</div>
+            <div class="step-title">ComplyAI Formatter &amp; Sender</div>
+            <div class="step-sub">Map all enriched fields to the ComplyAI JSON schema · validate · deliver two payloads</div>
+          </div>
+        </div>
+        <div class="step-body">
+          <div class="step-body-col">
+            <div class="step-body-label">Field mapping (required)</div>
+            <div class="detail-item">adId · BusinessArea (hardcoded: Streaming) · adType (Political)</div>
+            <div class="detail-item">adDescription · fileFormat · fileSize — from VAST XML</div>
+            <div class="detail-item">duration · industry · approvalStatus · approvalNotes — from Freewheel</div>
+            <div class="detail-item">advertiserId · advertiserName · brandProduct — from Freewheel brands[ ]</div>
+            <div class="detail-item">GeneralNotes — IronDome feedback string (optional)</div>
+          </div>
+          <div class="step-body-col">
+            <div class="step-body-label">Delivery</div>
+            <div class="detail-item">Payload 1: full political ads list (all PENDING political creatives)</div>
+            <div class="detail-item">Payload 2: flagged creatives list (IronDome FAIL records only)</div>
+            <div class="detail-item">Pydantic schema validation before delivery — failures → dead-letter queue</div>
+            <div class="detail-item">3 retries with exponential backoff on delivery</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><div class="conn-line"></div><div class="conn-label">both payloads delivered</div><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+      <!-- STEP 5 -->
+      <div class="step s-green">
+        <div class="step-header">
+          <div class="step-num-badge">5</div>
+          <div class="step-header-text">
+            <div class="step-tag">Stage 05 · ComplyAI Review</div>
+            <div class="step-title">ComplyAI Compliance Review</div>
+            <div class="step-sub">Compliance team reviews both payloads against regulatory requirements and internal policy</div>
+          </div>
+        </div>
+        <div class="step-body">
+          <div class="step-body-col">
+            <div class="step-body-label">Review inputs</div>
+            <div class="detail-item">Full political ads list — all PENDING creatives reviewed for compliance</div>
+            <div class="detail-item">Flagged creatives list — IronDome-flagged items prioritised</div>
+            <div class="detail-item">GeneralNotes (IronDome feedback) surfaced per flagged creative</div>
+          </div>
+          <div class="step-body-col">
+            <div class="step-body-label">Outcome</div>
+            <div class="detail-item">Compliance determination per creative: compliant or non-compliant</div>
+            <div class="detail-item">Non-compliant or uncertain creatives escalated to Ad Ops for final decision</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector"><div class="conn-line"></div><div class="conn-label">escalation to Ad Ops</div><div class="conn-line"></div><div class="conn-arrow"></div></div>
+
+      <!-- STEP 6 AD OPS -->
+      <div class="adops-decision">
+        <div class="adops-decision-header">
+          <div class="adops-diamond-wrap"><div class="adops-diamond"></div><div class="adops-diamond-label">Ad<br>Ops</div></div>
+          <div>
+            <div class="adops-decision-title">Step 6 · Ad Ops — Approve or Reject</div>
+            <div class="adops-decision-sub">Ad Ops receives escalation from ComplyAI and makes the final creative disposition decision</div>
+          </div>
+        </div>
+        <div class="adops-outcomes">
+          <div class="adops-outcome">
+            <div class="outcome-badge ob-approve">✓ Approve</div>
+            <div class="outcome-text">Creative passes compliance review. Ad Ops approves for trafficking. Creative proceeds to go live on schedule.</div>
+          </div>
+          <div class="adops-outcome">
+            <div class="outcome-badge ob-reject">✗ Reject</div>
+            <div class="outcome-text">Creative fails compliance review. Ad Ops rejects. Creative is held from going live. DSP / advertiser notified for remediation.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /pipeline-wrap -->
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">Sequential<br>steps</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num">1h</div><div class="stat-label">Run<br>cadence</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num">2</div><div class="stat-label">ComplyAI<br>payloads</div></div>
+    <div class="stat-div"></div>
+    <div class="stat"><div class="stat-num">~6w</div><div class="stat-label">Est. build<br>timeline</div></div>
+    <div class="stat-right">Draft v1.0 · May 2026 · Media Operations</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════
+     TAB 2 — QUESTIONS FOR AD OPS
+════════════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-adops" class="tab-panel">
+  <div class="content-wrap">
+    <div class="page-title">Questions for Ad Ops</div>
+    <div class="page-sub">These questions need Ad Ops input before the pipeline can be built or go live. Answers will shape escalation logic, approval workflows, and the feedback loop back to Freewheel and advertisers.</div>
+
+    <div class="section-title">Escalation &amp; Decision workflow</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-warn">?</div>
+      <div class="q-text">
+        <div class="q-label">Escalation flow</div>
+        <div class="q-main">When ComplyAI escalates a flagged creative to Ad Ops, what is the expected turnaround time for a decision?</div>
+        <div class="q-context">The pipeline runs hourly. If creatives are escalated but Ad Ops decisions take 24–48 hours, we need to understand how that gap is managed and whether creatives can go live in the interim.</div>
+        <span class="q-owner">Owner: Ad Ops lead</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-warn">?</div>
+      <div class="q-text">
+        <div class="q-label">Approval mechanism</div>
+        <div class="q-main">How does Ad Ops currently approve or reject creatives — is there an existing tool, ticketing system, or is this a manual email/Slack process?</div>
+        <div class="q-context">Understanding the current workflow helps determine whether the pipeline needs to integrate with an existing approval tool or simply deliver information for Ad Ops to act on independently.</div>
+        <span class="q-owner">Owner: Ad Ops lead</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-warn">?</div>
+      <div class="q-text">
+        <div class="q-label">Reject path</div>
+        <div class="q-main">When Ad Ops rejects a creative, who is responsible for notifying the DSP or advertiser — Ad Ops, ComplyAI, or an automated system?</div>
+        <div class="q-context">The pipeline can be built to trigger a notification on rejection, but we need to know who owns that communication and what the notification should say.</div>
+        <span class="q-owner">Owner: Ad Ops + ComplyAI team</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-warn">?</div>
+      <div class="q-text">
+        <div class="q-label">Feedback loop</div>
+        <div class="q-main">Should the pipeline track final Ad Ops disposition (approved / rejected) and write it back to the run log or a shared record for audit purposes?</div>
+        <div class="q-context">Maintaining a record of every creative reviewed and its outcome is important for regulatory compliance. Confirming this requirement will shape data retention design.</div>
+        <span class="q-owner">Owner: Ad Ops + Media Ops</span>
+      </div>
+    </div>
+
+    <div class="section-title">Freewheel creative data</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-warn">?</div>
+      <div class="q-text">
+        <div class="q-label">Advertiser module creatives</div>
+        <div class="q-main">Are there political creatives that come through the Freewheel advertiser module (not the programmatic API)? If so, how should those be handled?</div>
+        <div class="q-context">The pipeline currently targets the programmatic creatives endpoint where approval_status = PENDING is available. In the advertiser module, there is no explicit approval field — approval is implied by assignment to an active placement. If Ad Ops manages advertiser-module creatives, we need a separate detection strategy.</div>
+        <span class="q-owner">Owner: Ad Ops + Engineering</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-warn">?</div>
+      <div class="q-text">
+        <div class="q-label">Brand &amp; industry classification</div>
+        <div class="q-main">In the Freewheel advertiser module, Brand is set at the IO level and Industry can be in a different location depending on account setup. How consistent is this across your accounts — is there a standard structure Ad Ops follows?</div>
+        <div class="q-context">If account setup varies, the political detection logic may miss some creatives or misclassify others. Ad Ops' knowledge of the account hierarchy will help us make the filter reliable.</div>
+        <span class="q-owner">Owner: Ad Ops</span>
+      </div>
+    </div>
+
+    <div class="section-title">Out-of-scope confirmation</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-warn">?</div>
+      <div class="q-text">
+        <div class="q-label">Remediation ownership</div>
+        <div class="q-main">When a creative is rejected, who owns the remediation process — does Ad Ops work directly with the DSP, or does it route back through ComplyAI?</div>
+        <div class="q-context">Remediation and editing of flagged creatives is explicitly out of scope for this pipeline. Confirming who owns it ensures nothing falls through the cracks post-rejection.</div>
+        <span class="q-owner">Owner: Ad Ops + ComplyAI team</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════
+     TAB 3 — QUESTIONS FOR ENGINEERING
+════════════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-engineering" class="tab-panel">
+  <div class="content-wrap">
+    <div class="page-title">Questions for Engineering</div>
+    <div class="page-sub">These are the unresolved technical questions that block or significantly affect implementation. Answers are needed before or during the M1 Discovery milestone.</div>
+
+    <div class="section-title">Freewheel API</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">Endpoint confirmation</div>
+        <div class="q-main">Is the standard <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:11px;">/v1/creative/programmatic_creatives</code> endpoint the correct one, or is the pretranscode endpoint required?</div>
+        <div class="q-context">The ComplyAI team's initial spike targeted the pretranscode endpoint. We need to confirm which is correct and whether both return the same creative payload structure before implementation begins.</div>
+        <span class="q-owner">Owner: Engineering + Freewheel team</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">Server-side industry filtering</div>
+        <div class="q-main">Does the Freewheel API support an <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:11px;">industry_contains</code> server-side filter param, or must political filtering be done client-side after fetching all PENDING creatives?</div>
+        <div class="q-context">If server-side filtering is not supported, the pipeline must fetch all PENDING creatives and filter locally. At high creative volumes this increases API call load and run time — important for rate limit planning.</div>
+        <span class="q-owner">Owner: Engineering + Freewheel team</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">Rate limits</div>
+        <div class="q-main">What are the Freewheel API rate limits — calls per hour and calls per day?</div>
+        <div class="q-context">The pipeline will make one paginated fetch per hour plus one VAST XML fetch per creative. During peak political season (potentially hundreds of creatives per hour), we need to confirm headroom exists and plan backoff strategy accordingly.</div>
+        <span class="q-owner">Owner: Engineering + Freewheel team</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">API availability latency</div>
+        <div class="q-main">How quickly does a newly submitted creative appear in the Freewheel API — is it real-time, or is there a processing delay of minutes or hours?</div>
+        <div class="q-context">If there's a delay between submission and API availability, the pipeline's hourly cadence may not be sufficient to catch all creatives before they go live. This affects the SLA guarantee.</div>
+        <span class="q-owner">Owner: Engineering + Freewheel team</span>
+      </div>
+    </div>
+
+    <div class="section-title">VAST XML</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">VAST URL availability</div>
+        <div class="q-main">Is <code style="background:var(--bg);padding:1px 5px;border-radius:3px;font-size:11px;">vast_content_url</code> always populated for political creatives at PENDING stage, or can it be null?</div>
+        <div class="q-context">If VAST URL is null at PENDING, we can't extract adDescription, fileFormat, or fileSize. The current design delivers with null values in that case — but if ComplyAI rejects nulls on required fields, this needs a different handling strategy.</div>
+        <span class="q-owner">Owner: Engineering + Freewheel team</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">VAST hosting &amp; latency</div>
+        <div class="q-main">Who hosts the VAST XML files — Freewheel CDN, the DSP's server, or a shared CloudFront distribution? What is the expected fetch latency?</div>
+        <div class="q-context">With potentially hundreds of creatives per run, slow VAST fetches could push total run time past the 60-minute SLA. Understanding hosting and expected latency is needed to determine if parallel fetching is required.</div>
+        <span class="q-owner">Owner: Engineering</span>
+      </div>
+    </div>
+
+    <div class="section-title">IronDome</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">Sync vs async API</div>
+        <div class="q-main">Is the IronDome API synchronous (response returned immediately) or asynchronous (webhook callback)?</div>
+        <div class="q-context">This is a critical design decision. A synchronous IronDome fits within the current single-stage design. An async IronDome requires splitting Stage 3 into a submission step and a polling/callback step, which significantly changes the architecture.</div>
+        <span class="q-owner">Owner: IronDome team</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">Scan turnaround &amp; sandbox</div>
+        <div class="q-main">What is the expected scan turnaround time per creative, and is there a sandbox or staging environment available for integration testing?</div>
+        <div class="q-context">Without a sandbox, integration testing requires production access — increasing risk during development. Scan time also affects overall pipeline latency and the 60-minute end-to-end SLA.</div>
+        <span class="q-owner">Owner: IronDome team</span>
+      </div>
+    </div>
+
+    <div class="section-title">ComplyAI delivery</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">Delivery mechanism</div>
+        <div class="q-main">Has the ComplyAI team confirmed the delivery mechanism — webhook POST, S3 file drop, or a direct API endpoint? What is the endpoint URL and authentication method?</div>
+        <div class="q-context">Stage 4 delivery logic cannot be built until the mechanism is confirmed. The retry and dead-letter queue design may also change depending on whether delivery is synchronous (webhook) or async (S3).</div>
+        <span class="q-owner">Owner: Engineering + ComplyAI team</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">Null field tolerance</div>
+        <div class="q-main">Will ComplyAI accept null values for required fields (fileFormat, fileSize) when a VAST fetch fails, or will it reject the entire record?</div>
+        <div class="q-context">The current design delivers records with null VAST fields rather than dropping them. If ComplyAI rejects nulls on required fields, we need a dead-letter or hold queue for creatives pending VAST resolution.</div>
+        <span class="q-owner">Owner: Engineering + ComplyAI team</span>
+      </div>
+    </div>
+
+    <div class="section-title">Scheduler &amp; infrastructure</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-eng">E</div>
+      <div class="q-text">
+        <div class="q-label">Scheduler ownership</div>
+        <div class="q-main">Who owns the scheduler infrastructure — Media Ops Engineering, the Platform team, or a managed service (AWS EventBridge, Airflow, Kubernetes CronJob)?</div>
+        <div class="q-context">The MVP uses the Python schedule library for simplicity. For production, a managed scheduler is strongly recommended for retry handling, execution history, and alerting. The decision affects the M5 milestone scope.</div>
+        <span class="q-owner">Owner: Engineering + Platform team</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════
+     TAB 4 — QUESTIONS FOR LEADERSHIP
+════════════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-leadership" class="tab-panel">
+  <div class="content-wrap">
+    <div class="page-title">Questions for Leadership</div>
+    <div class="page-sub">These are decisions that require alignment across teams or carry business, legal, or resourcing implications. They should be answered before build begins to avoid scope changes mid-development.</div>
+
+    <div class="section-title">Strategic alignment</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-lead">L</div>
+      <div class="q-text">
+        <div class="q-label">Business priority</div>
+        <div class="q-main">What is the business driver for this pipeline — regulatory compliance, advertiser trust, operational efficiency, or all three? And which is primary?</div>
+        <div class="q-context">Understanding the primary driver helps prioritize trade-offs during build. For example, if regulatory compliance is the primary driver, 100% capture rate takes precedence over speed — which may affect the hourly cadence decision.</div>
+        <span class="q-owner">Owner: Media Ops leadership + Legal</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-lead">L</div>
+      <div class="q-text">
+        <div class="q-label">Target date &amp; political season</div>
+        <div class="q-main">The PRD targets Q3 2026. Is this tied to a specific political campaign season or regulatory deadline? Are there consequences if the pipeline launches late?</div>
+        <div class="q-context">The estimated build timeline is 6 weeks assuming M1 discovery completes without blockers. If there's a hard deadline tied to political season, parallel workstreams and additional engineering resourcing may be needed.</div>
+        <span class="q-owner">Owner: Product Owner + Legal</span>
+      </div>
+    </div>
+
+    <div class="section-title">Resourcing &amp; ownership</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-lead">L</div>
+      <div class="q-text">
+        <div class="q-label">Engineering resourcing</div>
+        <div class="q-main">How many engineers are allocated to this project? The technical approach notes that parallel workstreams (Stages 2 and 3) can reduce timeline if two engineers are available.</div>
+        <div class="q-context">With one engineer, the build is sequential (~6 weeks). With two engineers working in parallel on Stages 2 and 3, this could compress to ~4–5 weeks — important if there is a political season deadline.</div>
+        <span class="q-owner">Owner: Engineering lead + Media Ops leadership</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-lead">L</div>
+      <div class="q-text">
+        <div class="q-label">Team DRI</div>
+        <div class="q-main">The PRD lists all team members as TBD — Product Owner, Engineering Lead, Compliance Reviewer, and IronDome Scanner Integration contact. Who are the named DRIs for each role?</div>
+        <div class="q-context">Without named owners, decisions stall and blockers don't get resolved. This is the single most actionable item before any discovery work begins.</div>
+        <span class="q-owner">Owner: Media Ops leadership</span>
+      </div>
+    </div>
+
+    <div class="section-title">Policy &amp; compliance</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-lead">L</div>
+      <div class="q-text">
+        <div class="q-label">Compliance rule definition</div>
+        <div class="q-main">Who owns the definition of "out of spec" for political creatives within IronDome? Is that ruleset currently documented and signed off?</div>
+        <div class="q-context">IronDome flags creatives based on spec rules. If those rules are not yet defined or approved, IronDome's PASS/FAIL results will be unreliable — meaning ComplyAI and Ad Ops are acting on incomplete information.</div>
+        <span class="q-owner">Owner: ComplyAI team + Legal + IronDome team</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-lead">L</div>
+      <div class="q-text">
+        <div class="q-label">Retroactive scanning</div>
+        <div class="q-main">The PRD explicitly excludes retroactive scanning of creatives submitted before the pipeline launches. Is leadership aligned on that exclusion?</div>
+        <div class="q-context">If there are political creatives already in Freewheel that have not been scanned, leadership needs to decide whether a one-time retroactive scan is needed before the pipeline goes live — or whether the risk of unscanned historical creatives is acceptable.</div>
+        <span class="q-owner">Owner: Media Ops leadership + Legal</span>
+      </div>
+    </div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-lead">L</div>
+      <div class="q-text">
+        <div class="q-label">Escalation SLA</div>
+        <div class="q-main">What is the expected SLA for Ad Ops to respond to a ComplyAI escalation? Should this be codified in a policy document?</div>
+        <div class="q-context">Without a defined escalation SLA, flagged creatives could sit unreviewed while the political campaign continues. Leadership alignment on turnaround time (e.g., 4 hours, same business day) is needed to make the pipeline operationally complete.</div>
+        <span class="q-owner">Owner: Ad Ops leadership + Media Ops leadership</span>
+      </div>
+    </div>
+
+    <div class="section-title">Infrastructure &amp; data</div>
+
+    <div class="q-item">
+      <div class="q-icon q-icon-lead">L</div>
+      <div class="q-text">
+        <div class="q-label">Production scheduler</div>
+        <div class="q-main">For production, the technical approach recommends replacing the Python scheduler with AWS EventBridge, Apache Airflow, or a Kubernetes CronJob. Is there an existing managed scheduler the team should use, or does this require a new infrastructure investment?</div>
+        <div class="q-context">The Python schedule library is sufficient for MVP but is not suitable for production — it has no execution history, dead-letter handling, or managed alerting. Leadership needs to confirm the production infra path and who funds it.</div>
+        <span class="q-owner">Owner: Engineering lead + Platform team + Finance</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════
+     TAB 5 — PRD
+════════════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-prd" class="tab-panel">
+  <div class="content-wrap">
+    <div class="page-title">Product Requirements Document</div>
+    <div class="page-sub">Freewheel Political Ads Pre-Live Retrieval Pipeline · <span class="badge badge-draft">Draft — In Review</span> · Target: Q3 2026</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;">
+      <div class="card">
+        <div class="card-title">Team</div>
+        <div class="card-body" style="font-size:12px;line-height:1.8;">
+          <strong>Product Owner:</strong> TBD — Media Operations<br>
+          <strong>Engineering Lead:</strong> TBD — Engineering<br>
+          <strong>Compliance Reviewer:</strong> TBD — Comply AI<br>
+          <strong>Scanner Integration:</strong> TBD — IronDome
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Quick links</div>
+        <div class="card-body" style="font-size:12px;line-height:1.8;">
+          <strong>Work Tracker:</strong> Jira Epic — Freewheel Political Ads Compliance Pipeline<br>
+          <strong>Mapping Document:</strong> Mapping_Document.xlsx — ComplyAI field schema<br>
+          <strong>Tech Approach:</strong> See Tab 06 of this document
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Objective</div>
+    <div class="card">
+      <div class="card-body">Build an automated, hourly pipeline that retrieves political ad creatives from Freewheel before they go live, validates them through IronDome (internal creative scanner), and delivers structured compliance-ready outputs to the Comply AI team in their required JSON schema.<br><br>
+      Today, political creatives entering the Freewheel system are not systematically reviewed before going live. There is no automated mechanism to detect, extract, or flag them for compliance review — creating regulatory exposure and operational risk during political campaign seasons. This pipeline makes that process automated, auditable, and repeatable.</div>
+    </div>
+
+    <div class="section-title">Success metrics</div>
+    <div style="background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px;">
+      <table class="data-table">
+        <thead><tr><th>Goal</th><th>Metric</th><th>Assumption</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Capture all political creatives pre-live</strong></td><td>100% capture rate — zero PENDING political creatives missed within 1 hour of submission</td><td>Freewheel API returns PENDING creatives in near real-time; hourly polling sufficient</td></tr>
+          <tr><td><strong>Pipeline uptime</strong></td><td>&gt;99.5% uptime over rolling 30-day window</td><td>Hosting environment supports always-on scheduled services; failure alerting in place</td></tr>
+          <tr><td><strong>End-to-end latency</strong></td><td>&lt;60 minutes from Freewheel submission to ComplyAI delivery</td><td>IronDome scan response is synchronous or completes within 30 minutes</td></tr>
+          <tr><td><strong>Schema compliance</strong></td><td>100% of delivered records pass schema validation — all required fields populated</td><td>ComplyAI team has confirmed and locked the JSON mapping schema before build begins</td></tr>
+          <tr><td><strong>IronDome accuracy</strong></td><td>False positive rate &lt;5%</td><td>IronDome spec rules calibrated for political ad formats</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Requirements</div>
+    <div style="background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px;">
+      <table class="data-table">
+        <thead><tr><th>Requirement</th><th>Importance</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Retrieve all PENDING political ad creatives from Freewheel API on an hourly cadence</td><td><span class="badge badge-open">Must Have</span></td><td>Confirm if industry_contains is supported server-side or must be done client-side</td></tr>
+          <tr><td>Filter creatives where industries[ ].name contains "politic" (case-insensitive)</td><td><span class="badge badge-open">Must Have</span></td><td>Covers: Politicians – All else, Political Advertising, Political – Federal, etc.</td></tr>
+          <tr><td>Delta cursor — only pull creatives new or updated since last successful run</td><td><span class="badge badge-open">Must Have</span></td><td>Use dsp_creative_updated_at and created_at Unix timestamps as cursors</td></tr>
+          <tr><td>Parse VAST XML per creative to extract adDescription, fileFormat, fileSize</td><td><span class="badge badge-open">Must Have</span></td><td>Requires secondary HTTP fetch of vast_content_url per creative</td></tr>
+          <tr><td>Submit each creative to IronDome for spec validation and generate flagged creatives report</td><td><span class="badge badge-open">Must Have</span></td><td>IronDome API contract (sync vs async) must be confirmed with IronDome team</td></tr>
+          <tr><td>Deliver two payloads to ComplyAI: full political ads list and flagged creatives list</td><td><span class="badge badge-open">Must Have</span></td><td>Delivery mechanism (webhook, S3, API) must be confirmed with ComplyAI team</td></tr>
+          <tr><td>Both outputs must conform to the ComplyAI JSON mapping schema</td><td><span class="badge badge-open">Must Have</span></td><td>Required fields: adId, BusinessArea, adType, adDescription, creativeStatus, fileFormat, fileSize, duration, industry, approvalStatus, approvalNotes, advertiserId, advertiserName, brandProduct</td></tr>
+          <tr><td>Retry logic with exponential backoff on all external calls</td><td><span class="badge badge-open">Must Have</span></td><td>3 retries per call; failed deliveries routed to dead-letter queue with alert</td></tr>
+          <tr><td>Structured run logs: count fetched, count flagged, count delivered, errors, duration</td><td><span class="badge badge-tbd">Should Have</span></td><td>Emit JSON log per run with run_id, triggered_at, status, and all counters</td></tr>
+          <tr><td>API credentials stored in secrets manager — not in code or environment files</td><td><span class="badge badge-tbd">Should Have</span></td><td>AWS Secrets Manager or equivalent; rotate tokens per policy</td></tr>
+          <tr><td>Hourly run on fixed schedule (:00 past each hour)</td><td><span class="badge badge-done">Nice to Have</span></td><td>Managed scheduler preferred over in-process schedule library for production</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Out of scope</div>
+    <div class="card">
+      <div class="card-body">
+        <ul style="padding-left:16px;line-height:2;">
+          <li>Remediation or editing of flagged creatives — Comply AI team owns downstream action</li>
+          <li>Compliance policy definition or rule configuration within IronDome</li>
+          <li>Scheduling fields: scheduleAirDate, scheduleAirtime, networks, marketDMA, states, campaigns — not available in Freewheel programmatic feed</li>
+          <li>Retroactive scanning of historical creatives submitted before pipeline launch</li>
+          <li>Linear or VOD delivery decisioning (linearFinalAction, vodFinalAction)</li>
+          <li>Non-political ad creatives — pipeline scoped exclusively to political industry classification</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section-title">Open questions</div>
+    <div style="background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;">
+      <table class="data-table">
+        <thead><tr><th>Question</th><th>Status</th><th>Owner</th></tr></thead>
+        <tbody>
+          <tr><td>Does Freewheel API support server-side industry filtering, or must filtering be done client-side?</td><td><span class="badge badge-open">TBD</span></td><td>Freewheel + Engineering</td></tr>
+          <tr><td>Is the pretranscode endpoint correct, or is the standard programmatic creatives endpoint sufficient?</td><td><span class="badge badge-open">TBD</span></td><td>Freewheel + Engineering</td></tr>
+          <tr><td>What are the Freewheel API rate limits for hourly polling?</td><td><span class="badge badge-open">TBD</span></td><td>Freewheel team</td></tr>
+          <tr><td>Has ComplyAI confirmed delivery mechanism (webhook, S3, API) and endpoint URL?</td><td><span class="badge badge-draft">Schema confirmed · Delivery TBD</span></td><td>ComplyAI team</td></tr>
+          <tr><td>What is the IronDome API contract — synchronous or async callback?</td><td><span class="badge badge-open">TBD</span></td><td>IronDome team</td></tr>
+          <tr><td>Fixed hourly clock schedule or rolling interval from last run completion?</td><td><span class="badge badge-open">TBD</span></td><td>Media Ops</td></tr>
+          <tr><td>Expected volume of political creatives per hour during peak political season?</td><td><span class="badge badge-open">TBD</span></td><td>Media Ops + Ad Ops</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════════
+     TAB 6 — TECHNICAL IMPLEMENTATION
+════════════════════════════════════════════════════════════════════════════════ -->
+<div id="tab-technical" class="tab-panel">
+  <div class="content-wrap">
+    <div class="page-title">Technical Implementation</div>
+    <div class="page-sub">Architecture, data flow, and stage-by-stage implementation guide. Python-based scheduled service with four independently-retriable stages. <span class="badge badge-draft">Draft v1.0</span></div>
+
+    <div class="section-title">Architecture overview</div>
+    <div style="background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px;">
+      <table class="data-table">
+        <thead><tr><th>#</th><th>Stage</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1</strong></td><td><strong>Freewheel Fetcher</strong></td><td>Poll Freewheel API, apply political industry filter, delta-cursor deduplication, pagination</td></tr>
+          <tr><td><strong>2</strong></td><td><strong>VAST Parser</strong></td><td>Fetch and parse vast_content_url XML per creative — extract adDescription, fileFormat, fileSize</td></tr>
+          <tr><td><strong>3</strong></td><td><strong>IronDome Scanner</strong></td><td>Submit each creative to IronDome for spec validation, collect scan results, build flagged list</td></tr>
+          <tr><td><strong>4</strong></td><td><strong>ComplyAI Formatter &amp; Sender</strong></td><td>Map all fields to ComplyAI JSON schema, validate required fields, deliver two payloads with retry logic</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mid);margin-bottom:6px;">Technology stack</div>
+      <div style="font-size:12px;line-height:1.8;color:var(--ink);">Python 3.11+ &nbsp;·&nbsp; httpx / requests (HTTP client) &nbsp;·&nbsp; schedule (cron) &nbsp;·&nbsp; lxml (VAST XML parsing) &nbsp;·&nbsp; pydantic (schema validation) &nbsp;·&nbsp; boto3 (secrets manager + optional S3 delivery) &nbsp;·&nbsp; structlog (structured logging)</div>
+    </div>
+
+    <div class="section-title">Stage 1 — Freewheel Fetcher</div>
+    <div class="card">
+      <div class="card-title">Endpoint</div>
+      <div class="code-block">GET /v1/creative/programmatic_creatives
+  ?approval_status=PENDING
+  &amp;page=1
+  &amp;per_page=100
+  &amp;updated_since={LAST_RUN_UNIX_TS}
+
+Authorization: Bearer {FREEWHEEL_API_TOKEN}
+Accept: application/json</div>
+      <div class="card-title" style="margin-top:16px;">Political detection logic</div>
+      <div class="code-block"><span class="code-fn">def</span> <span class="code-key">is_political</span>(creative: dict) -> bool:
+    <span class="code-fn">return</span> any(
+        <span class="code-str">'politic'</span> in (ind.get(<span class="code-str">'name'</span>) or <span class="code-str">''</span>).lower()
+        <span class="code-fn">for</span> ind in creative.get(<span class="code-str">'industries'</span>, [])
+    )
+
+<span class="code-comment"># Covers: 'Politicians - All else', 'Political Advertising',</span>
+<span class="code-comment">#         'Political - Federal', 'Political - State', etc.</span></div>
+      <div class="card-title" style="margin-top:16px;">Delta cursor state file</div>
+      <div class="code-block">{
+  <span class="code-key">"last_run_ts"</span>:     <span class="code-str">1748300400</span>,
+  <span class="code-key">"last_run_iso"</span>:    <span class="code-str">"2026-05-26T13:00:00Z"</span>,
+  <span class="code-key">"last_run_status"</span>: <span class="code-str">"success"</span>
+}</div>
+    </div>
+
+    <div class="section-title">Stage 2 — VAST XML Parser</div>
+    <div class="card">
+      <div class="card-body" style="margin-bottom:12px;">Three ComplyAI required fields are only available from VAST XML: adDescription (adTitle), fileFormat, and fileSize. A secondary HTTP fetch is required per creative.</div>
+      <div class="code-block"><span class="code-fn">def</span> <span class="code-key">parse_vast</span>(vast_url: str) -> dict:
+    resp = httpx.get(vast_url, timeout=10)
+    tree = etree.fromstring(resp.content)
+
+    ad_title    = tree.findtext(<span class="code-str">'.//AdTitle'</span>, default=<span class="code-str">''</span>)
+    media_files = tree.findall(<span class="code-str">'.//MediaFile'</span>)
+
+    file_format, file_size = <span class="code-str">''</span>, 0
+    <span class="code-fn">if</span> media_files:
+        mf          = media_files[0]
+        file_format = mf.get(<span class="code-str">'type'</span>, <span class="code-str">''</span>).split(<span class="code-str">'/'</span>)[-1].upper()
+        file_size   = round(int(mf.get(<span class="code-str">'fileSize'</span>, 0)) / (1024**2), 2)
+
+    <span class="code-fn">return</span> {
+        <span class="code-key">'adDescription'</span>: ad_title,
+        <span class="code-key">'fileFormat'</span>:    file_format,
+        <span class="code-key">'fileSize'</span>:       file_size,
+    }</div>
+    </div>
+
+    <div class="section-title">Stage 3 — IronDome Integration</div>
+    <div class="card">
+      <div class="card-body" style="margin-bottom:12px;">The design below assumes a synchronous REST API. If IronDome is async (webhook callback), Stage 3 will be split into a submission step and a polling/callback step.</div>
+      <div class="code-block"><span class="code-fn">def</span> <span class="code-key">scan_creative</span>(creative_id: str, vast_url: str) -> dict:
+    resp = requests.post(
+        url=IRONDOME_SCAN_ENDPOINT,
+        headers={<span class="code-str">'Authorization'</span>: f<span class="code-str">'Bearer {IRONDOME_TOKEN}'</span>},
+        json={<span class="code-str">'creativeId'</span>: creative_id, <span class="code-str">'vastUrl'</span>: vast_url},
+        timeout=30,
+    )
+    result = resp.json()
+    <span class="code-fn">return</span> {
+        <span class="code-key">'passed'</span>: result.get(<span class="code-str">'status'</span>) == <span class="code-str">'PASS'</span>,
+        <span class="code-key">'notes'</span>:  result.get(<span class="code-str">'feedback'</span>, <span class="code-str">''</span>),
+    }</div>
+    <div style="margin-top:12px;font-size:12px;line-height:1.7;color:var(--mid);">
+      Creatives where passed=False are collected into a separate flagged_creatives list. IronDome feedback string is written to the GeneralNotes field of the ComplyAI payload. If IronDome is unreachable after 3 retries, scan_status is set to UNKNOWN and the creative is included in the full list only.
+    </div>
+    </div>
+
+    <div class="section-title">Stage 4 — ComplyAI Formatter</div>
+    <div class="card">
+      <div class="card-title">Field mapping reference</div>
+      <div style="overflow:hidden;border-radius:6px;margin-top:10px;">
+        <table class="data-table">
+          <thead><tr><th>ComplyAI Field</th><th>Source</th><th>Required</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>adId</td><td>id (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td>Cast to string</td></tr>
+            <tr><td>BusinessArea</td><td>Hardcoded: 'Streaming'</td><td><span class="badge badge-open">Yes</span></td><td>Always Streaming for this feed</td></tr>
+            <tr><td>adType</td><td>Derived from industries[ ].name</td><td><span class="badge badge-open">Yes</span></td><td>Political if name contains 'politic'</td></tr>
+            <tr><td>adDescription</td><td>adTitle from VAST XML</td><td><span class="badge badge-open">Yes</span></td><td>Secondary fetch required</td></tr>
+            <tr><td>creativeStatus</td><td>status (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td></td></tr>
+            <tr><td>fileFormat</td><td>MediaFile type from VAST XML</td><td><span class="badge badge-open">Yes</span></td><td>e.g. MP4; secondary fetch required</td></tr>
+            <tr><td>fileSize</td><td>MediaFile fileSize from VAST XML</td><td><span class="badge badge-open">Yes</span></td><td>Bytes converted to MB</td></tr>
+            <tr><td>duration</td><td>duration (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td>Seconds</td></tr>
+            <tr><td>industry</td><td>industries[ ].name (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td>Array</td></tr>
+            <tr><td>approvalStatus</td><td>approval_status (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td></td></tr>
+            <tr><td>approvalNotes</td><td>approvalNotes (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td>May be null</td></tr>
+            <tr><td>advertiserId</td><td>brands[0].id (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td>Cast to string</td></tr>
+            <tr><td>advertiserName</td><td>brands[ ].name (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td>Array</td></tr>
+            <tr><td>brandProduct</td><td>brands[ ].name (Freewheel)</td><td><span class="badge badge-open">Yes</span></td><td>Same as advertiserName in this feed</td></tr>
+            <tr><td>GeneralNotes</td><td>IronDome scan feedback</td><td><span class="badge badge-done">No</span></td><td>Placeholder for IronDome notes</td></tr>
+            <tr><td>scheduleAirDate</td><td>N/A</td><td><span class="badge badge-done">No</span></td><td>Not in Freewheel feed — omit</td></tr>
+            <tr><td>networks / DMA</td><td>N/A</td><td><span class="badge badge-done">No</span></td><td>Not in Freewheel feed — omit</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section-title">Error handling matrix</div>
+    <div style="background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px;">
+      <table class="data-table">
+        <thead><tr><th>Failure scenario</th><th>Handling</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Freewheel API unavailable</strong></td><td>3 retries with exponential backoff (5s, 10s, 20s); alert on-call; preserve last_run_ts; abort run — next hourly run re-fetches missed window</td></tr>
+          <tr><td><strong>VAST URL fetch fails</strong></td><td>Log warning; populate fileFormat and fileSize as null; do not skip the creative</td></tr>
+          <tr><td><strong>IronDome timeout / error</strong></td><td>3 retries; if still failing, set scan_status=UNKNOWN; include in full list only; alert if &gt;10% fail</td></tr>
+          <tr><td><strong>ComplyAI delivery failure</strong></td><td>3 retries with backoff; if all fail, write to dead-letter queue; alert on-call; do not mark run as success</td></tr>
+          <tr><td><strong>Schema validation failure</strong></td><td>Route record to dead-letter queue with error detail; alert; do not deliver malformed payload; run continues for remaining valid records</td></tr>
+          <tr><td><strong>Duplicate creative detected</strong></td><td>Skip re-processing based on creative ID + dsp_creative_updated_at; log as skipped</td></tr>
+          <tr><td><strong>State file corruption</strong></td><td>Fallback to last_run_ts = (now – 2 hours); alert for manual review</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Milestone plan</div>
+    <div class="card">
+      <div class="milestone">
+        <div class="ms-num">M1</div>
+        <div class="ms-body">
+          <div class="ms-title">Discovery &amp; Confirmation</div>
+          <div class="ms-detail">Confirm Freewheel endpoint variant + rate limits; confirm IronDome API contract (sync/async); confirm ComplyAI delivery mechanism and schema sign-off</div>
+        </div>
+        <div class="ms-dur">1 week</div>
+      </div>
+      <div class="milestone">
+        <div class="ms-num">M2</div>
+        <div class="ms-body">
+          <div class="ms-title">Freewheel Fetcher + VAST Parser</div>
+          <div class="ms-detail">Working Stage 1 and Stage 2 with delta cursor, pagination, political filter, VAST parse, and unit tests</div>
+        </div>
+        <div class="ms-dur">1 week</div>
+      </div>
+      <div class="milestone">
+        <div class="ms-num">M3</div>
+        <div class="ms-body">
+          <div class="ms-title">IronDome Integration</div>
+          <div class="ms-detail">Stage 3 integration, scan result handling, flagged creative list generation</div>
+        </div>
+        <div class="ms-dur">1 week</div>
+      </div>
+      <div class="milestone">
+        <div class="ms-num">M4</div>
+        <div class="ms-body">
+          <div class="ms-title">ComplyAI Formatter + Delivery</div>
+          <div class="ms-detail">Stage 4 with Pydantic schema validation, dual payload delivery, retry logic, and dead-letter queue</div>
+        </div>
+        <div class="ms-dur">1 week</div>
+      </div>
+      <div class="milestone">
+        <div class="ms-num">M5</div>
+        <div class="ms-body">
+          <div class="ms-title">Scheduler + Observability</div>
+          <div class="ms-detail">Hourly scheduler, structured run logging, alerting, dead-letter queue, secrets manager integration</div>
+        </div>
+        <div class="ms-dur">3 days</div>
+      </div>
+      <div class="milestone">
+        <div class="ms-num">M6</div>
+        <div class="ms-body">
+          <div class="ms-title">QA &amp; UAT</div>
+          <div class="ms-detail">End-to-end test run with Comply AI team using real Freewheel data; schema sign-off; IronDome scan accuracy review</div>
+        </div>
+        <div class="ms-dur">1 week</div>
+      </div>
+      <div class="milestone">
+        <div class="ms-num">M7</div>
+        <div class="ms-body">
+          <div class="ms-title">Production Launch</div>
+          <div class="ms-detail">Deploy to production environment; runbook written; on-call rotation set up; monitoring dashboards live</div>
+        </div>
+        <div class="ms-dur">2 days</div>
+      </div>
+      <div style="margin-top:16px;padding:12px 0 0;border-top:1px solid var(--line);font-size:12px;color:var(--mid);">
+        <strong style="color:var(--ink);">Total estimated timeline: ~6 weeks.</strong> Timeline assumes M1 discovery completes without blockers and all external API contracts are confirmed in week 1. Parallel workstreams (Stages 2 and 3) can reduce total time if two engineers are available.
+      </div>
+    </div>
+
+    <div class="section-title">Security</div>
+    <div class="card">
+      <div class="card-body">
+        <ul style="padding-left:16px;line-height:2;">
+          <li>All API tokens (Freewheel, IronDome, ComplyAI) stored in AWS Secrets Manager — never in code, environment files, or version control</li>
+          <li>VAST XML fetched over HTTPS only; CloudFront origin URL validated against expected domain pattern</li>
+          <li>All inter-service calls use short-lived tokens refreshed at run start</li>
+          <li>Dead-letter queue payloads encrypted at rest</li>
+          <li>Run logs redact any PII or sensitive advertiser data before writing to log sink</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>
