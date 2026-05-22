@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Freewheel Political Ads Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue:     #0057B8;
+    --blue-l:   #E8F0FB;
+    --blue-m:   #B3CCEF;
+    --purple:   #4B3F72;
+    --purple-l: #EFECF7;
+    --purple-m: #C4BAE0;
+    --coral:    #C8102E;
+    --coral-l:  #FDECEA;
+    --coral-m:  #F5B8C0;
+    --teal:     #007A5E;
+    --teal-l:   #E6F5F1;
+    --teal-m:   #99D4C7;
+    --green:    #2E7D32;
+    --green-l:  #F1F8E9;
+    --green-m:  #A5D6A7;
+    --amber:    #B45309;
+    --amber-l:  #FEF3C7;
+    --amber-m:  #FCD34D;
+    --adops:    #7C3AED;
+    --adops-l:  #EDE9FE;
+    --adops-m:  #C4B5FD;
+    --ink:      #1A1A2E;
+    --mid:      #6B6B80;
+    --line:     #D4D2CB;
+    --bg:       #F4F3EF;
+    --white:    #FFFFFF;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--ink);
+    padding: 28px 48px 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .header-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: #8888A0;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header-title { font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+  .header-sub { font-size: 13px; color: #8888A0; margin-top: 6px; font-weight: 300; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin-top: 4px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8888A0; font-family: 'IBM Plex Mono', monospace; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* CANVAS */
+  .canvas {
+    padding: 40px 120px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* STEP WRAPPER */
+  .step-wrap {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* CONNECTOR */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    margin: 0;
+  }
+  .conn-line {
+    width: 2px;
+    height: 32px;
+    background: var(--line);
+  }
+  .conn-arrow {
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--line);
+  }
+  .conn-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--mid);
+    padding: 2px 8px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    margin: 4px 0;
+    letter-spacing: 0.06em;
+  }
+
+  /* STEP CARD */
+  .step {
+    width: 100%;
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    overflow: hidden;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .step:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.10); }
+
+  .step-header {
+    padding: 16px 20px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .step-num-badge {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .step-header-text { flex: 1; }
+  .step-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    margin-bottom: 4px;
+  }
+  .step-title { font-size: 15px; font-weight: 700; line-height: 1.3; margin-bottom: 3px; }
+  .step-sub { font-size: 12px; line-height: 1.4; opacity: 0.7; }
+
+  .step-body {
+    padding: 12px 20px 16px;
+    border-top: 1px solid transparent;
+    display: flex;
+    gap: 20px;
+  }
+  .step-body-col { flex: 1; }
+  .step-body-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.45;
+    margin-bottom: 6px;
+  }
+  .detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-bottom: 3px;
+  }
+  .detail-item::before {
+    content: '›';
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 0px;
+    opacity: 0.5;
+  }
+  .note-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 11px;
+    line-height: 1.5;
+    margin-bottom: 3px;
+    font-style: italic;
+    opacity: 0.75;
+  }
+  .note-item::before {
+    content: '!';
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    background: var(--amber-m);
+    color: var(--amber);
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+
+  /* Color themes */
+  /* TRIGGER */
+  .s-trigger { background: var(--ink); border-color: #333350; }
+  .s-trigger .step-header { }
+  .s-trigger .step-tag { color: #8888A0; }
+  .s-trigger .step-title { color: #fff; }
+  .s-trigger .step-sub { color: #8888A0; }
+  .s-trigger .step-body { background: #232336; border-top-color: #333350; }
+  .s-trigger .step-body-label { color: #8888A0; }
+  .s-trigger .detail-item { color: #8888A0; }
+  .s-trigger .step-num-badge { background: #333350; color: #8888A0; }
+
+  /* BLUE */
+  .s-blue { background: var(--blue-l); border-color: var(--blue-m); }
+  .s-blue .step-tag { color: var(--blue); }
+  .s-blue .step-title { color: var(--blue); }
+  .s-blue .step-body { background: #dce9f8; border-top-color: var(--blue-m); }
+  .s-blue .step-num-badge { background: var(--blue); color: #fff; }
+
+  /* PURPLE */
+  .s-purple { background: var(--purple-l); border-color: var(--purple-m); }
+  .s-purple .step-tag { color: var(--purple); }
+  .s-purple .step-title { color: var(--purple); }
+  .s-purple .step-body { background: #e4dff5; border-top-color: var(--purple-m); }
+  .s-purple .step-num-badge { background: var(--purple); color: #fff; }
+
+  /* CORAL */
+  .s-coral { background: var(--coral-l); border-color: var(--coral-m); }
+  .s-coral .step-tag { color: var(--coral); }
+  .s-coral .step-title { color: var(--coral); }
+  .s-coral .step-body { background: #fcd6da; border-top-color: var(--coral-m); }
+  .s-coral .step-num-badge { background: var(--coral); color: #fff; }
+
+  /* TEAL */
+  .s-teal { background: var(--teal-l); border-color: var(--teal-m); }
+  .s-teal .step-tag { color: var(--teal); }
+  .s-teal .step-title { color: var(--teal); }
+  .s-teal .step-body { background: #c8e8e0; border-top-color: var(--teal-m); }
+  .s-teal .step-num-badge { background: var(--teal); color: #fff; }
+
+  /* GREEN */
+  .s-green { background: var(--green-l); border-color: var(--green-m); }
+  .s-green .step-tag { color: var(--green); }
+  .s-green .step-title { color: var(--green); }
+  .s-green .step-body { background: #d4edcf; border-top-color: var(--green-m); }
+  .s-green .step-num-badge { background: var(--green); color: #fff; }
+
+  /* ADOPS */
+  .s-adops { background: var(--adops-l); border-color: var(--adops-m); }
+  .s-adops .step-tag { color: var(--adops); }
+  .s-adops .step-title { color: var(--adops); }
+  .s-adops .step-body { background: #ddd6fe; border-top-color: var(--adops-m); }
+  .s-adops .step-num-badge { background: var(--adops); color: #fff; }
+
+  /* DECISION */
+  .decision-card {
+    width: 100%;
+    background: var(--white);
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .diamond-wrap {
+    flex-shrink: 0;
+    width: 72px; height: 72px;
+    position: relative;
+  }
+  .diamond {
+    width: 50px; height: 50px;
+    transform: rotate(45deg);
+    border-radius: 5px;
+    position: absolute;
+    top: 11px; left: 11px;
+    background: var(--purple-l);
+    border: 1.5px solid var(--purple-m);
+  }
+  .diamond-label {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+    color: var(--purple);
+    text-align: center;
+    line-height: 1.3;
+    pointer-events: none;
+  }
+  .decision-paths { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .dpath { display: flex; align-items: flex-start; gap: 9px; font-size: 12px; }
+  .dpath-badge {
+    flex-shrink: 0;
+    padding: 2px 9px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 1px;
+  }
+  .dp-yes { background: var(--green-l); color: var(--green); }
+  .dp-no  { background: var(--bg); color: var(--mid); border: 1px solid var(--line); }
+  .dpath-text { color: var(--mid); line-height: 1.4; }
+
+  /* FINAL DECISION — approve/reject */
+  .adops-decision {
+    width: 100%;
+    border-radius: 12px;
+    border: 1.5px solid var(--adops-m);
+    overflow: hidden;
+  }
+  .adops-decision-header {
+    background: var(--adops-l);
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .adops-diamond-wrap { flex-shrink: 0; width: 56px; height: 56px; position: relative; }
+  .adops-diamond {
+    width: 38px; height: 38px;
+    transform: rotate(45deg);
+    border-radius: 4px;
+    position: absolute;
+    top: 9px; left: 9px;
+    background: var(--adops);
+    border: none;
+  }
+  .adops-diamond-label {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700; color: #fff;
+    text-align: center; line-height: 1.2;
+    pointer-events: none;
+  }
+  .adops-decision-title { font-size: 14px; font-weight: 700; color: var(--adops); }
+  .adops-decision-sub { font-size: 11px; color: var(--mid); margin-top: 3px; }
+
+  .adops-outcomes {
+    display: flex;
+    border-top: 1px solid var(--adops-m);
+  }
+  .adops-outcome {
+    flex: 1;
+    padding: 14px 18px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .adops-outcome + .adops-outcome { border-left: 1px solid var(--adops-m); }
+  .outcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-bottom: 4px;
+  }
+  .ob-approve { background: var(--green-l); color: var(--green); }
+  .ob-reject  { background: var(--coral-l); color: var(--coral); }
+  .outcome-text { font-size: 11px; line-height: 1.5; color: var(--mid); }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--ink);
+    padding: 14px 48px;
+    display: flex; align-items: center; gap: 32px; flex-wrap: wrap;
+  }
+  .stat { display: flex; align-items: center; gap: 10px; }
+  .stat-num { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; color: #fff; }
+  .stat-label { font-size: 11px; color: #8888A0; line-height: 1.3; }
+  .stat-div { width: 1px; height: 28px; background: #333350; }
+  .stat-right { margin-left: auto; font-size: 11px; color: #555570; font-family: 'IBM Plex Mono', monospace; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-tag">Media Operations · Pipeline Documentation · Draft v1.0</div>
+    <div class="header-title">Freewheel Political Ads Pre-Live Retrieval Pipeline</div>
+    <div class="header-sub">Sequential linear flow · 7 steps · automated hourly run</div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Freewheel</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>VAST Parse</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>IronDome</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--teal)"></div>ComplyAI</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--adops)"></div>Ad Ops</div>
+  </div>
+</div>
+
+<div class="canvas">
+<div class="step-wrap">
+
+  <!-- ═══ STEP 0: TRIGGER ═══ -->
+  <div class="step s-trigger">
+    <div class="step-header">
+      <div class="step-num-badge">⏱</div>
+      <div class="step-header-text">
+        <div class="step-tag">Trigger</div>
+        <div class="step-title">Hourly scheduler fires</div>
+        <div class="step-sub">Automated run at :00 each hour · loads last_run_ts from state file</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-body-col">
+        <div class="step-body-label">How it works</div>
+        <div class="detail-item" style="color:#8888A0;">Delta cursor — only creatives new or updated since last successful run are processed</div>
+        <div class="detail-item" style="color:#8888A0;">State file persists last_run_ts so failures can resume without reprocessing clean records</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- connector -->
+  <div class="connector">
+    <div class="conn-line"></div>
+    <div class="conn-arrow"></div>
+  </div>
+
+  <!-- ═══ STEP 1: FREEWHEEL FETCHER ═══ -->
+  <div class="step s-blue">
+    <div class="step-header">
+      <div class="step-num-badge">1</div>
+      <div class="step-header-text">
+        <div class="step-tag">Stage 01 · Freewheel</div>
+        <div class="step-title">Freewheel Fetcher</div>
+        <div class="step-sub">Poll Freewheel API for PENDING political ad creatives updated since last run</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-body-col">
+        <div class="step-body-label">What it fetches</div>
+        <div class="detail-item">Endpoint: GET /v1/creative/programmatic_creatives</div>
+        <div class="detail-item">Filter: approval_status = PENDING (programmatic creatives only)</div>
+        <div class="detail-item">Political filter: industries[ ].name contains "politic" (case-insensitive)</div>
+        <div class="detail-item">Paginate 100 records per page until all results retrieved</div>
+      </div>
+      <div class="step-body-col">
+        <div class="step-body-label">Freewheel data model notes</div>
+        <div class="note-item">approval_status is a programmatic-only field — not available on advertiser module creatives</div>
+        <div class="note-item">In the advertiser module, a creative assigned to an active placement implies approval (no explicit approval field)</div>
+        <div class="note-item">Brand is set at the IO (Insertion Order) level in the advertiser module hierarchy</div>
+        <div class="note-item">Industry is located in a different place than Brand in the advertiser module — depends on account setup</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- connector -->
+  <div class="connector">
+    <div class="conn-line"></div>
+    <div class="conn-label">creatives retrieved</div>
+    <div class="conn-line"></div>
+    <div class="conn-arrow"></div>
+  </div>
+
+  <!-- ═══ DECISION: ANY CREATIVES? ═══ -->
+  <div class="decision-card">
+    <div class="diamond-wrap">
+      <div class="diamond"></div>
+      <div class="diamond-label">Any<br>creatives?</div>
+    </div>
+    <div class="decision-paths">
+      <div class="dpath">
+        <span class="dpath-badge dp-yes">YES</span>
+        <span class="dpath-text">Continue to Stage 2 — enrich with VAST XML metadata</span>
+      </div>
+      <div class="dpath">
+        <span class="dpath-badge dp-no">NO</span>
+        <span class="dpath-text">Log empty run · save state · skip all remaining stages until next hourly trigger</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- connector -->
+  <div class="connector">
+    <div class="conn-line"></div>
+    <div class="conn-label">yes — proceed</div>
+    <div class="conn-line"></div>
+    <div class="conn-arrow"></div>
+  </div>
+
+  <!-- ═══ STEP 2: VAST PARSER ═══ -->
+  <div class="step s-purple">
+    <div class="step-header">
+      <div class="step-num-badge">2</div>
+      <div class="step-header-text">
+        <div class="step-tag">Stage 02 · VAST XML</div>
+        <div class="step-title">VAST XML Parser</div>
+        <div class="step-sub">Fetch and parse each creative's VAST XML to extract metadata not available in the Freewheel API response</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-body-col">
+        <div class="step-body-label">Fields extracted from VAST XML</div>
+        <div class="detail-item">adDescription — from &lt;AdTitle&gt; element</div>
+        <div class="detail-item">fileFormat — from MediaFile type attribute (e.g. MP4)</div>
+        <div class="detail-item">fileSize — from MediaFile fileSize attribute, converted bytes → MB</div>
+      </div>
+      <div class="step-body-col">
+        <div class="step-body-label">Error handling</div>
+        <div class="detail-item">VAST URL cached per creative in-run to avoid duplicate fetches</div>
+        <div class="detail-item">If VAST fetch fails: deliver creative with null fileFormat / fileSize — do not skip</div>
+        <div class="detail-item">Failures logged in run summary as vast_parse_errors count</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- connector -->
+  <div class="connector">
+    <div class="conn-line"></div>
+    <div class="conn-label">creatives enriched</div>
+    <div class="conn-line"></div>
+    <div class="conn-arrow"></div>
+  </div>
+
+  <!-- ═══ STEP 3: IRONDOME ═══ -->
+  <div class="step s-coral">
+    <div class="step-header">
+      <div class="step-num-badge">3</div>
+      <div class="step-header-text">
+        <div class="step-tag">Stage 03 · IronDome</div>
+        <div class="step-title">IronDome Scanner</div>
+        <div class="step-sub">Submit each creative to IronDome for spec validation — builds the flagged creatives list</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-body-col">
+        <div class="step-body-label">Scan logic</div>
+        <div class="detail-item">Send creative_id + vast_url to IronDome scan endpoint</div>
+        <div class="detail-item">Returns PASS or FAIL per creative + feedback string</div>
+        <div class="detail-item">FAIL → creative added to flagged list, feedback → GeneralNotes field</div>
+        <div class="detail-item">PASS → creative added to full list only</div>
+      </div>
+      <div class="step-body-col">
+        <div class="step-body-label">Error handling</div>
+        <div class="detail-item">3 retries with exponential backoff (5s, 10s, 20s)</div>
+        <div class="detail-item">Unreachable after retries → scan_status = UNKNOWN · full list only</div>
+        <div class="detail-item">Alert triggered if &gt;10% of creatives fail scan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- connector -->
+  <div class="connector">
+    <div class="conn-line"></div>
+    <div class="conn-label">scan results collected</div>
+    <div class="conn-line"></div>
+    <div class="conn-arrow"></div>
+  </div>
+
+  <!-- ═══ STEP 4: COMPLY AI FORMATTER ═══ -->
+  <div class="step s-teal">
+    <div class="step-header">
+      <div class="step-num-badge">4</div>
+      <div class="step-header-text">
+        <div class="step-tag">Stage 04 · ComplyAI</div>
+        <div class="step-title">ComplyAI Formatter &amp; Sender</div>
+        <div class="step-sub">Map all enriched fields to the ComplyAI JSON schema · validate · deliver two payloads</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-body-col">
+        <div class="step-body-label">Field mapping (required)</div>
+        <div class="detail-item">adId · BusinessArea (hardcoded: Streaming) · adType (Political)</div>
+        <div class="detail-item">adDescription · fileFormat · fileSize — from VAST XML</div>
+        <div class="detail-item">duration · industry · approvalStatus · approvalNotes — from Freewheel</div>
+        <div class="detail-item">advertiserId · advertiserName · brandProduct — from Freewheel brands[ ]</div>
+        <div class="detail-item">GeneralNotes — IronDome feedback string (optional)</div>
+      </div>
+      <div class="step-body-col">
+        <div class="step-body-label">Delivery</div>
+        <div class="detail-item">Payload 1: full political ads list (all PENDING political creatives)</div>
+        <div class="detail-item">Payload 2: flagged creatives list (IronDome FAIL records only)</div>
+        <div class="detail-item">Pydantic schema validation before delivery — failures → dead-letter queue</div>
+        <div class="detail-item">3 retries with exponential backoff on delivery</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- connector -->
+  <div class="connector">
+    <div class="conn-line"></div>
+    <div class="conn-label">both payloads delivered</div>
+    <div class="conn-line"></div>
+    <div class="conn-arrow"></div>
+  </div>
+
+  <!-- ═══ STEP 5: COMPLY AI REVIEW ═══ -->
+  <div class="step s-green">
+    <div class="step-header">
+      <div class="step-num-badge">5</div>
+      <div class="step-header-text">
+        <div class="step-tag">Stage 05 · ComplyAI Review</div>
+        <div class="step-title">ComplyAI Compliance Review</div>
+        <div class="step-sub">Compliance team reviews both payloads against regulatory requirements and internal policy</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-body-col">
+        <div class="step-body-label">Reviewes</div>
+        <div class="detail-item">Full political ads list — all PENDING creatives reviewed for compliance</div>
+        <div class="detail-item">Flagged creatives list — IronDome-flagged items prioritised for review</div>
+        <div class="detail-item">GeneralNotes (IronDome feedback) surfaced per flagged creative</div>
+      </div>
+      <div class="step-body-col">
+        <div class="step-body-label">Outcome</div>
+        <div class="detail-item">Compliance determination made per creative: compliant or non-compliant</div>
+        <div class="detail-item">Non-compliant or uncertain creatives escalated to Ad Ops team for final decision</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- connector -->
+  <div class="connector">
+    <div class="conn-line"></div>
+    <div class="conn-label">escalation to Ad Ops</div>
+    <div class="conn-line"></div>
+    <div class="conn-arrow"></div>
+  </div>
+
+  <!-- ═══ STEP 6: AD OPS APPROVE / REJECT ═══ -->
+  <div class="adops-decision">
+    <div class="adops-decision-header">
+      <div class="adops-diamond-wrap">
+        <div class="adops-diamond"></div>
+        <div class="adops-diamond-label">Ad<br>Ops</div>
+      </div>
+      <div>
+        <div class="adops-decision-title">Step 6 · Ad Ops — Approve or Reject</div>
+        <div class="adops-decision-sub">Ad Ops team receives escalation from ComplyAI and makes the final creative disposition decision</div>
+      </div>
+    </div>
+    <div class="adops-outcomes">
+      <div class="adops-outcome">
+        <div class="outcome-badge ob-approve">✓ Approve</div>
+        <div class="outcome-text">Creative passes compliance review. Ad Ops approves for trafficking. Creative proceeds to go live on schedule.</div>
+      </div>
+      <div class="adops-outcome">
+        <div class="outcome-badge ob-reject">✗ Reject</div>
+        <div class="outcome-text">Creative fails compliance review. Ad Ops rejects. Creative is held from going live. DSP / advertiser notified for remediation.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /step-wrap -->
+</div><!-- /canvas -->
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">6</div>
+    <div class="stat-label">Sequential<br>steps</div>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat">
+    <div class="stat-num">1h</div>
+    <div class="stat-label">Run<br>cadence</div>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat">
+    <div class="stat-num">2</div>
+    <div class="stat-label">ComplyAI<br>payloads</div>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat">
+    <div class="stat-num">~6w</div>
+    <div class="stat-label">Est. build<br>timeline</div>
+  </div>
+  <div class="stat-right">Draft v1.0 · May 2026 · Media Operations</div>
+</div>
+
+</body>
+</html>
